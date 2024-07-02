@@ -1,0 +1,3 @@
+D:/projects/practice/build/CMakeFiles/ImageCompressor.dir
+D:/projects/practice/build/CMakeFiles/edit_cache.dir
+D:/projects/practice/build/CMakeFiles/rebuild_cache.dir
