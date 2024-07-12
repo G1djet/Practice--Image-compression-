@@ -20,13 +20,11 @@ void buildHuffmanCode(HuffmanNode* root, std::unordered_map<uint8_t, std::string
 }
 
 std::vector<uint8_t> compressHuffman(const std::vector<uint8_t>& pixelData) {
-    // Подсчет частоты появления каждого байта
     std::unordered_map<uint8_t, int> frequencyMap;
     for (uint8_t pixel : pixelData) {
         frequencyMap[pixel]++;
     }
 
-    // Создание дерева Хаффмана
     std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, std::greater<HuffmanNode*>> pq;
     for (const auto& [value, freq] : frequencyMap) {
         pq.push(new HuffmanNode(value, freq));
@@ -40,18 +38,15 @@ std::vector<uint8_t> compressHuffman(const std::vector<uint8_t>& pixelData) {
 
     HuffmanNode* root = pq.top();
 
-    // Построение кодов Хаффмана
     std::unordered_map<uint8_t, std::string> huffmanCodes;
     buildHuffmanCode(root, huffmanCodes);
 
-    // Сжатие данных
     std::vector<uint8_t> compressedData;
     std::string bitstream;
     for (uint8_t pixel : pixelData) {
         bitstream += huffmanCodes[pixel];
     }
 
-    // Добавление дополнительных нулевых битов, если длина битового потока не кратна 8
     while (bitstream.length() % 8 != 0) {
         bitstream += "0";
     }

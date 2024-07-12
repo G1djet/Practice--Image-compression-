@@ -23,7 +23,6 @@ std::vector<uint8_t> compressRLE(const std::vector<uint8_t>& pixelData, uint16_t
         }
     }
 
-    // Добавляем последний блок
     if (count > 2 || (currentPixel == 0 && count == 2)) {
         compressedData.push_back(static_cast<uint8_t>(count));
         compressedData.push_back(currentPixel);
@@ -33,7 +32,6 @@ std::vector<uint8_t> compressRLE(const std::vector<uint8_t>& pixelData, uint16_t
         }
     }
 
-    // Добавляем дополнительный байт, если общий размер компрессированных данных нечетный
     if (compressedData.size() % 2 != 0) {
         compressedData.push_back(0);
     }
@@ -49,21 +47,20 @@ std::vector<uint8_t> decompressedData;
         uint8_t pixel = compressedData[i++];
         if (count == 0) {
             if (compressedData[i] == 0) {
-                // Конец строки
                 i++;
-            } else {
-                // Абсолютный режим
+            } 
+        else {
                 count = compressedData[i++];
                 for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
                     decompressedData.push_back(compressedData[i++]);
                 }
                 if (count % 2 != 0) {
-                    i++;  // Пропускаем дополнительный байт
+                    i++;  
                 }
             }
-        } else {
-            // Обычный режим
-            for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
+        } 
+else {
+             for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
                 decompressedData.push_back(pixel);
             }
         }

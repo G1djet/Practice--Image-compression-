@@ -21,7 +21,6 @@ void FractalCompression::compressTIFF() {
 }
 
 std::vector<double> FractalCompression::getPixelValues(const std::string& filename) {
-    // Реализация функции для получения значений пикселей из BMP или TIFF изображения
     std::vector<double> pixelValues;
     std::ifstream inputFile(filename, std::ios::binary);
     if (!inputFile) {
@@ -29,21 +28,19 @@ std::vector<double> FractalCompression::getPixelValues(const std::string& filena
         return pixelValues;
     }
 
-    // Код для чтения пикселей из файла в зависимости от формата (BMP или TIFF)
+    // еще добавить кусок в зависимости от формата
     // ...
 
     return pixelValues;
 }
 
 void FractalCompression::writeCompressedData(const std::string& filename, const std::vector<double>& compressedData) {
-    // Реализация функции для записи сжатых данных в выходной файл
     std::ofstream outFile(filename, std::ios::binary);
     if (!outFile) {
         std::cerr << "Не удалось создать файл: " << filename << std::endl;
         return;
     }
 
-    // Код для записи сжатых данных в файл
     for (double value : compressedData) {
         outFile.write(reinterpret_cast<const char*>(&value), sizeof(double));
     }
@@ -52,10 +49,8 @@ void FractalCompression::writeCompressedData(const std::string& filename, const 
 }
 
 std::vector<double> FractalCompression::compressFractal(const std::vector<double>& pixelValues) {
-    // Реализация алгоритма фрактального сжатия
     std::vector<double> compressedData;
 
-    // Разбиение изображения на блоки
     int blockSize = 8;
     int width = static_cast<int>(sqrt(pixelValues.size()));
     int height = width;
@@ -69,14 +64,10 @@ std::vector<double> FractalCompression::compressFractal(const std::vector<double
                 }
             }
 
-            // Примерная реализация алгоритма фрактального сжатия для блока
             double similarity = 0.0;
             int offsetX = 0, offsetY = 0;
             double scale = 1.0;
             double rotation = 0.0;
-
-            // Поиск наилучшего совпадения в блоках
-            // ...
 
             compressedData.push_back(similarity);
             compressedData.push_back(offsetX);
