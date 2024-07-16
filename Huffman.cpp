@@ -80,3 +80,25 @@ std::vector<uint8_t> decompressHuffman(const std::vector<uint8_t>& compressedDat
 
     return decompressedData;
 }
+
+HuffmanNode* buildHuffmanTree(const std::vector<uint8_t>& data) {
+    std::unordered_map<uint8_t, int> frequencyMap;
+    for (uint8_t byte : data) {
+        frequencyMap[byte]++;
+    }
+
+    std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, std::greater<HuffmanNode*>> pq;
+    for (const auto& [value, freq] : frequencyMap) {
+        pq.push(new HuffmanNode(value, freq));
+    }
+
+    while (pq.size() > 1) {
+        HuffmanNode* left = pq.top();
+        pq.pop();
+        HuffmanNode* right = pq.top();
+        pq.pop();
+        pq.push(new HuffmanNode(0, left->frequency + right->frequency, left, right));
+    }
+
+    return pq.top();
+}

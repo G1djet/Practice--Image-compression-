@@ -48,8 +48,7 @@ std::vector<uint8_t> decompressedData;
         if (count == 0) {
             if (compressedData[i] == 0) {
                 i++;
-            } 
-        else {
+            } else {
                 count = compressedData[i++];
                 for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
                     decompressedData.push_back(compressedData[i++]);
@@ -58,9 +57,8 @@ std::vector<uint8_t> decompressedData;
                     i++;  
                 }
             }
-        } 
-else {
-             for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
+        } else {
+            for (uint8_t j = 0; j < count && decompressedData.size() < sizeOfPixelArray; j++) {
                 decompressedData.push_back(pixel);
             }
         }

@@ -1,8 +1,8 @@
 [
 {
-  "directory": "D:/projects/practice/build",
-  "command": "C:\\msys64\\mingw64\\bin\\c++.exe -g -std=gnu++14 -o CMakeFiles\\ImageCompressor.dir\\main.cpp.obj -c D:\\projects\\practice\\main.cpp",
-  "file": "D:\\projects\\practice\\main.cpp",
+  "directory": "D:/projects/practice_last/build",
+  "command": "C:\\msys64\\mingw64\\bin\\c++.exe -ID:/projects/practice_last/SFML/include -g -o CMakeFiles\\ImageCompressor.dir\\main.cpp.obj -c D:\\projects\\practice_last\\main.cpp",
+  "file": "D:\\projects\\practice_last\\main.cpp",
   "output": "CMakeFiles\\ImageCompressor.dir\\main.cpp.obj"
 }
 ]

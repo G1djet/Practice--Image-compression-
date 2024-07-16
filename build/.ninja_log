@@ -1,3 +1,7 @@
 # ninja log v5
-2	834	7416033331594223	CMakeFiles/ImageCompressor.dir/main.cpp.obj	b1aa77d25e3de840
-836	1121	7416033334420636	ImageCompressor.exe	58467f6e926d1643
+2	1911	7425520601954393	CMakeFiles/ImageCompressor.dir/main.cpp.obj	1be1d12172d2411b
+1913	2570	7425520608508401	ImageCompressor.exe	494bac58b8b17889
+5	1799	7425522633386332	CMakeFiles/ImageCompressor.dir/main.cpp.obj	1be1d12172d2411b
+1800	1935	7425522634723282	ImageCompressor.exe	494bac58b8b17889
+5	1789	7425524861158150	CMakeFiles/ImageCompressor.dir/main.cpp.obj	1be1d12172d2411b
+1790	1932	7425524862559256	ImageCompressor.exe	494bac58b8b17889
