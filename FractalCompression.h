@@ -14,6 +14,7 @@ private:
     std::string m_inputFile;
     std::string m_outputFile;
 
+    // Вспомогательные функции
     std::vector<double> getPixelValues(const std::string& filename);
     void writeCompressedData(const std::string& filename, const std::vector<double>& compressedData);
     std::vector<double> compressFractal(const std::vector<double>& pixelValues);

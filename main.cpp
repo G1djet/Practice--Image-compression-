@@ -2,7 +2,7 @@
 #include "Huffman.cpp"
 #include "RLECompressor.cpp"
 #include "DCTCompression.cpp"
-#include "FractalCompression.cpp"
+///#include "FractalCompression.cpp"
 
 #include <iostream>
 #include <vector>
@@ -13,18 +13,15 @@
 namespace fs = std::filesystem;
 
 int main() {
-    // Запрашиваем путь к файлу BMP или TIFF
     std::string inputFilePath;
     std::cout << "Enter the path to the BMP or TIFF image file: ";
     std::getline(std::cin, inputFilePath);
 
-    // Проверяем, что файл существует
     if (!fs::exists(inputFilePath)) {
         std::cerr << "Error: File not found." << std::endl;
         return 1;
     }
 
-    // Загружаем содержимое файла
     std::vector<uint8_t> originalData;
     std::ifstream file(inputFilePath, std::ios::binary);
     if (file.is_open()) {
@@ -39,7 +36,6 @@ int main() {
         return 1;
     }
 
-    // Предлагаем пользователю выбрать алгоритм сжатия
     int compressionAlgorithm;
     std::cout << "Select compression algorithm:" << std::endl;
     std::cout << "1. LZW" << std::endl;
@@ -50,20 +46,16 @@ int main() {
     std::cout << "Enter your choice (1-5): ";
     std::cin >> compressionAlgorithm;
 
-    // Выполняем сжатие изображения выбранным алгоритмом
     std::vector<uint8_t> compressedData;
     double compressionRatio = 0.0;
     switch (compressionAlgorithm) {
         case 1: { // LZW
-            // Компрессия с использованием алгоритма LZW
             LZWCompressor lzwCompressor;
             std::vector<uint8_t> compressedData = lzwCompressor.compressLZW(originalData);
             compressionRatio = static_cast<double>(compressedData.size()) / originalData.size();
 
-            // Восстанавливаем изображение из сжатых данных
             std::vector<uint8_t> decompressedData = lzwCompressor.decompressLZW(compressedData);
 
-            // Сравниваем оригинальные и восстановленные данные
             bool isDecompressionCorrect = (originalData == decompressedData);
             if (isDecompressionCorrect) {
                 std::cout << "Decompression successful." << std::endl;
@@ -73,17 +65,14 @@ int main() {
             break;
         }
         case 2: { // Huffman
-            // Сжатие с использованием алгоритма Хаффмана
             std::vector<uint8_t> compressedData = compressHuffman(originalData);
             compressionRatio = static_cast<double>(compressedData.size()) / originalData.size();
 
-            // Восстанавливаем изображение из сжатых данных
             std::unordered_map<uint8_t, std::string> huffmanCodes;
             HuffmanNode* root = buildHuffmanTree(originalData);
             buildHuffmanCode(root, huffmanCodes);
             std::vector<uint8_t> decompressedData = decompressHuffman(compressedData, huffmanCodes);
 
-            // Сравниваем оригинальные и восстановленные данные
             bool isDecompressionCorrect = (originalData == decompressedData);
             if (isDecompressionCorrect) {
                 std::cout << "Decompression successful." << std::endl;
@@ -96,10 +85,8 @@ int main() {
             std::vector<uint8_t> compressedData = compressRLE(originalData, 8); // Предполагаем, что изображение имеет 8 бит на пиксель
             compressionRatio = static_cast<double>(compressedData.size()) / originalData.size();
 
-            // Восстанавливаем изображение из сжатых данных
             std::vector<uint8_t> decompressedData = decompressRLE(compressedData, originalData.size());
 
-            // Сравниваем оригинальные и восстановленные данные
             bool isDecompressionCorrect = (originalData == decompressedData);
             if (isDecompressionCorrect) {
                 std::cout << "Decompression successful." << std::endl;
@@ -109,11 +96,9 @@ int main() {
             break;
         }
         case 4: { // DCT
-            // Компрессия с использованием алгоритма DCT
             int blockSize = 8;
             ImageCompression dctCompressor;
 
-            // Преобразуем исходные данные (вектор байтов) в двумерный вектор double
             int width = static_cast<int>(std::sqrt(originalData.size()));
             int height = width;
             std::vector<std::vector<double>> originalImageData(height, std::vector<double>(width));
@@ -125,15 +110,12 @@ int main() {
 
             std::vector<std::vector<double>> compressedImage = dctCompressor.compressImage(originalImageData, blockSize);
 
-            // Вычисление коэффициента сжатия
             int totalElements = height * width;
             int compressedElements = static_cast<int>(compressedImage.size() * compressedImage[0].size());
             compressionRatio = static_cast<double>(compressedElements) / totalElements;
 
-            // Восстановление изображения из сжатых данных
             std::vector<std::vector<double>> decompressedImage = dctCompressor.decompressImage(compressedImage, blockSize);
 
-            // Преобразование восстановленного изображения обратно в вектор байтов
             std::vector<uint8_t> decompressedData(originalData.size());
             for (int i = 0; i < height; ++i) {
                 for (int j = 0; j < width; ++j) {
@@ -141,7 +123,6 @@ int main() {
                 }
             }
 
-            // Сравнение оригинального и восстановленного изображений
             bool isDecompressionCorrect = (originalData == decompressedData);
             if (isDecompressionCorrect) {
                 std::cout << "Decompression successful." << std::endl;
@@ -165,11 +146,9 @@ int main() {
             //return 1;
     //}
 
-    // Сохраняем сжатое изображение в формат JPEG
     std::string outputFilePath = fs::path(inputFilePath).stem().string() + ".jpg";
-    // Здесь необходимо добавить логику для сохранения сжатых данных в формат JPEG
+    // добавить логику сжатых данных JPEG
 
-    // Выводим информацию о сжатии
     std::cout << "Compression ratio: " << compressionRatio * 100 << "%" << std::endl;
     std::cout << "Compressed file saved to: " << outputFilePath << std::endl;
 

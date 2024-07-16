@@ -24,32 +24,34 @@ void FractalCompression::compressTIFF() {
 void readBMPHeader(std::ifstream& inputFile, int& width, int& height, int& bitsPerPixel) {
     // Структура заголовка BMP
     struct BMPHeader {
-        uint16_t bfType;      
-        uint32_t bfSize;     
-        uint16_t bfReserved1; //  должно быть 0
-        uint16_t bfReserved2; //  должно быть 0
-        uint32_t bfOffBits;   
-        uint32_t biSize;     
-        int32_t  biWidth;     
-        int32_t  biHeight;    
-        uint16_t biPlanes;    
-        uint16_t biBitCount;  
-        uint32_t biCompression; 
-        uint32_t biSizeImage;   
-        int32_t  biXPelsPerMeter; 
-        int32_t  biYPelsPerMeter; 
-        uint32_t biClrUsed;   
-        uint32_t biClrImportant; 
+        uint16_t bfType;      // Тип файла, должен быть "BM" (0x4D42)
+        uint32_t bfSize;      // Размер BMP файла в байтах
+        uint16_t bfReserved1; // Резервное поле, должно быть 0
+        uint16_t bfReserved2; // Резервное поле, должно быть 0
+        uint32_t bfOffBits;   // Смещение от начала файла до данных изображения
+        uint32_t biSize;      // Размер структуры BITMAPINFOHEADER в байтах
+        int32_t  biWidth;     // Ширина изображения
+        int32_t  biHeight;    // Высота изображения
+        uint16_t biPlanes;    // Число плоскостей цвета в битовой карте
+        uint16_t biBitCount;  // Число битов на пиксель
+        uint32_t biCompression; // Тип сжатия
+        uint32_t biSizeImage;   // Размер данных изображения в байтах
+        int32_t  biXPelsPerMeter; // Горизонтальное разрешение, в пикселях на метр
+        int32_t  biYPelsPerMeter; // Вертикальное разрешение, в пикселях на метр
+        uint32_t biClrUsed;    // Число используемых цветовых индексов в таблице цветов
+        uint32_t biClrImportant; // Число важных цветовых индексов
     };
 
     BMPHeader header;
     inputFile.read(reinterpret_cast<char*>(&header), sizeof(BMPHeader));
 
+    // Извлечение необходимой информации из заголовка
     width = header.biWidth;
     height = header.biHeight;
     bitsPerPixel = header.biBitCount;
 
-    if (header.bfType != 0x4D42) { 
+    // Проверка на корректный формат BMP
+    if (header.bfType != 0x4D42) { // "BM"
         throw std::runtime_error("Неверный формат BMP файла");
     }
 }
@@ -62,6 +64,7 @@ std::vector<double> FractalCompression::getPixelValues(const std::string& filena
         return pixelValues;
     }
 
+    // Определение формата файла (BMP или TIFF)
     char header[2];
     inputFile.read(header, 2);
     inputFile.seekg(0, std::ios::beg);
@@ -84,56 +87,66 @@ std::vector<double> FractalCompression::getPixelValues(const std::string& filena
 
 
 void readBMPPixels(std::ifstream& inputFile, std::vector<double>& pixelValues, int width, int height, int bitsPerPixel) {
+    // Вычисление количества байт на строку с учетом выравнивания
     int rowStride = (width * (bitsPerPixel / 8) + 3) / 4 * 4;
 
+    // Пропуск пустого пространства в конце каждой строки
     int padding = rowStride - (width * (bitsPerPixel / 8));
 
+    // Чтение пикселей
     for (int y = height - 1; y >= 0; --y) {
         for (int x = 0; x < width; ++x) {
             double pixelValue;
             if (bitsPerPixel == 24) {
+                // 24-битный цвет (RGB)
                 uint8_t blue, green, red;
                 inputFile.read(reinterpret_cast<char*>(&blue), sizeof(uint8_t));
                 inputFile.read(reinterpret_cast<char*>(&green), sizeof(uint8_t));
                 inputFile.read(reinterpret_cast<char*>(&red), sizeof(uint8_t));
                 pixelValue = (red + green + blue) / 3.0;
             } else if (bitsPerPixel == 8) {
+                // 8-битный оттенок серого
                 uint8_t grayValue;
                 inputFile.read(reinterpret_cast<char*>(&grayValue), sizeof(uint8_t));
                 pixelValue = static_cast<double>(grayValue);
             } else {
+                // Обработка других глубин цвета
                 throw std::runtime_error("Неподдерживаемая глубина цвета в BMP файле");
             }
             pixelValues.push_back(pixelValue);
         }
+        // Пропуск выравнивающих байт в конце строки
         inputFile.ignore(padding);
     }
 }
 
 void readTIFFHeader(std::ifstream& inputFile, int& width, int& height, int& bitsPerPixel) {
+    // Структура заголовка TIFF
     struct TIFFHeader {
-        uint16_t byteOrder;    
-        uint16_t version;      
-        uint32_t offsetIFD;    
+        uint16_t byteOrder;    // Порядок байт (0x4D4D или 0x4949)
+        uint16_t version;      // Версия TIFF
+        uint32_t offsetIFD;    // Смещение до первого IFD (Image File Directory)
     };
 
     struct IFDEntry {
-        uint16_t tag;          
-        uint16_t type;         
-        uint32_t count;        
-        uint32_t valueOrOffset; 
+        uint16_t tag;          // Тег IFD
+        uint16_t type;         // Тип данных
+        uint32_t count;        // Количество данных
+        uint32_t valueOrOffset; // Значение или смещение до данных
     };
 
     TIFFHeader header;
     inputFile.read(reinterpret_cast<char*>(&header), sizeof(TIFFHeader));
 
-    if (header.byteOrder == 0x4D4D) { 
+    // Проверка порядка байт
+    if (header.byteOrder == 0x4D4D) { // Motorola (big-endian)
         swapEndian(header.version);
         swapEndian(header.offsetIFD);
-    } else if (header.byteOrder != 0x4949) { 
+    } else if (header.byteOrder != 0x4949) { // Intel (little-endian)
         throw std::runtime_error("Неподдерживаемый порядок байт в TIFF файле");
     }
 
+    // Переход к первому IFD
     inputFile.seekg(header.offsetIFD, std::ios::beg);
 
     uint16_t numEntries;
@@ -142,6 +155,7 @@ void readTIFFHeader(std::ifstream& inputFile, int& width, int& height, int& bits
         swapEndian(numEntries);
     }
 
+    // Поиск тегов ширины, высоты и глубины цвета
     for (uint16_t i = 0; i < numEntries; ++i) {
         IFDEntry entry;
         inputFile.read(reinterpret_cast<char*>(&entry), sizeof(IFDEntry));
@@ -152,19 +166,19 @@ void readTIFFHeader(std::ifstream& inputFile, int& width, int& height, int& bits
             swapEndian(entry.valueOrOffset);
         }
 
-        if (entry.tag == 0x0100) { 
+        if (entry.tag == 0x0100) { // Ширина
             inputFile.seekg(entry.valueOrOffset, std::ios::beg);
             inputFile.read(reinterpret_cast<char*>(&width), sizeof(int));
             if (header.byteOrder == 0x4D4D) {
                 swapEndian(width);
             }
-        } else if (entry.tag == 0x0101) { 
+        } else if (entry.tag == 0x0101) { // Высота
             inputFile.seekg(entry.valueOrOffset, std::ios::beg);
             inputFile.read(reinterpret_cast<char*>(&height), sizeof(int));
             if (header.byteOrder == 0x4D4D) {
                 swapEndian(height);
             }
-        } else if (entry.tag == 0x0102) { 
+        } else if (entry.tag == 0x0102) { // Глубина цвета
             inputFile.seekg(entry.valueOrOffset, std::ios::beg);
             inputFile.read(reinterpret_cast<char*>(&bitsPerPixel), sizeof(int));
             if (header.byteOrder == 0x4D4D) {
@@ -185,17 +199,21 @@ void swapEndian(T& value) {
 }
 
 void readTIFFPixels(std::ifstream& inputFile, std::vector<double>& pixelValues, int width, int height, int bitsPerPixel) {
-    // добавить чтение пикселей
-    // хз почему я это да этого не написала
+    // Реализация чтения пикселей из TIFF файла и сохранения их в pixelValues
+    // ...
 }
 void readBMPHeader(std::ifstream& inputFile, int& width, int& height, int& bitsPerPixel) {
+    // Пропуск первых 18 байт заголовка
     inputFile.ignore(18);
 
+    // Чтение ширины и высоты
     inputFile.read(reinterpret_cast<char*>(&width), sizeof(int));
     inputFile.read(reinterpret_cast<char*>(&height), sizeof(int));
 
+    // Пропуск 2 байт резервного поля
     inputFile.ignore(2);
 
+    // Чтение глубины цвета
     uint16_t bitCount;
     inputFile.read(reinterpret_cast<char*>(&bitCount), sizeof(uint16_t));
     bitsPerPixel = static_cast<int>(bitCount);
@@ -217,6 +235,7 @@ void readBMPPixels(std::ifstream& inputFile, std::vector<double>& pixelValues, i
                 inputFile.read(reinterpret_cast<char*>(&grayValue), sizeof(uint8_t));
                 pixelValue = static_cast<double>(grayValue);
             } else {
+                // Управление другими глубинами цвета
             }
             pixelValues.push_back(pixelValue);
         }
@@ -225,29 +244,32 @@ void readBMPPixels(std::ifstream& inputFile, std::vector<double>& pixelValues, i
 }
 
 void readTIFFHeader(std::ifstream& inputFile, int& width, int& height, int& bitsPerPixel) {
+    // Структура заголовка TIFF
     struct TIFFHeader {
-        uint16_t byteOrder;    
-        uint16_t version;      
-        uint32_t offsetIFD;    
+        uint16_t byteOrder;    // Порядок байт (0x4D4D или 0x4949)
+        uint16_t version;      // Версия TIFF
+        uint32_t offsetIFD;    // Смещение до первого IFD (Image File Directory)
     };
 
     struct IFDEntry {
-        uint16_t tag;         
-        uint16_t type;         
-        uint32_t count;        
-        uint32_t valueOrOffset; 
+        uint16_t tag;          // Тег IFD
+        uint16_t type;         // Тип данных
+        uint32_t count;        // Количество данных
+        uint32_t valueOrOffset; // Значение или смещение до данных
     };
 
     TIFFHeader header;
     inputFile.read(reinterpret_cast<char*>(&header), sizeof(TIFFHeader));
 
-    if (header.byteOrder == 0x4D4D) { 
+    // Проверка порядка байт
+    if (header.byteOrder == 0x4D4D) { // Motorola (big-endian)
         swapEndian(header.version);
         swapEndian(header.offsetIFD);
-    } else if (header.byteOrder != 0x4949) { 
+    } else if (header.byteOrder != 0x4949) { // Intel (little-endian)
         throw std::runtime_error("Неподдерживаемый порядок байт в TIFF файле");
     }
 
+    // Переход к первому IFD
     inputFile.seekg(header.offsetIFD, std::ios::beg);
 
     uint16_t numEntries;
@@ -256,6 +278,7 @@ void readTIFFHeader(std::ifstream& inputFile, int& width, int& height, int& bits
         swapEndian(numEntries);
     }
 
+    // Поиск тегов ширины, высоты и глубины цвета
     for (uint16_t i = 0; i < numEntries; ++i) {
         IFDEntry entry;
         inputFile.read(reinterpret_cast<char*>(&entry), sizeof(IFDEntry));
@@ -377,6 +400,7 @@ double computeSimilarity(
         }
     }
 
+    // Сравнение трансформированного блока с блоками в словаре
     double bestSimilarity = 0.0;
     for (int dictionaryBlockY = 0; dictionaryBlockY < dictionaryBlockSize; ++dictionaryBlockY) {
         for (int dictionaryBlockX = 0; dictionaryBlockX < dictionaryBlockSize; ++dictionaryBlockX) {
@@ -400,8 +424,10 @@ double computeSimilarity(
 
 
 std::vector<double> FractalCompression::compressFractal(const std::vector<double>& pixelValues) {
+    // Реализация алгоритма фрактального сжатия
     std::vector<double> compressedData;
 
+    // Разбиение изображения на блоки
     int blockSize = 8;
     int width = static_cast<int>(sqrt(pixelValues.size()));
     int height = width;
@@ -415,6 +441,7 @@ std::vector<double> FractalCompression::compressFractal(const std::vector<double
                 }
             }
 
+            // Примерная реализация алгоритма фрактального сжатия для блока
             double similarity = 0.0;
             int offsetX = 0, offsetY = 0;
             double scale = 1.0;
@@ -431,11 +458,13 @@ std::vector<double> FractalCompression::compressFractal(const std::vector<double
             double maxRotation = M_PI / 6; // Максимальный угол вращения (30 градусов)
             double rotationStep = M_PI / 36; // Шаг изменения вращения (5 градусов)
 
-            // Предполагается, что "dictionary" является вектором векторов uint8_t, представляющих блоки изображения(но мало ли что там предполагается)
+            // Предполагается, что "dictionary" является вектором векторов uint8_t, представляющих блоки изображения
             std::vector<std::vector<uint8_t>> dictionary;
+            // Вычислить количество блоков
             int numBlocks = (width / blockSize) * (height / blockSize);
             dictionary.resize(numBlocks);
 
+            // Заполнить словарь блоками из изображения
             int blockIndex = 0;
             std::vector<uint8_t> pixelValues(width * height); // замените на ваши пиксельные значения
             for (int y = 0; y < height; y += blockSize) {
@@ -449,6 +478,7 @@ std::vector<double> FractalCompression::compressFractal(const std::vector<double
                 }
             }            
 
+            // Поиск наилучшего совпадения в блоках
             for (int blockY = 0; blockY < numBlocksY; ++blockY) {
                 for (int blockX = 0; blockX < numBlocksX; ++blockX) {
                     double bestSimilarity = 0.0;
@@ -456,6 +486,7 @@ std::vector<double> FractalCompression::compressFractal(const std::vector<double
                     double bestScale = 1.0;
                     double bestRotation = 0.0;
 
+                    // Перебор всех возможных трансформаций
                     for (int offsetXCandidate = -maxOffset; offsetXCandidate <= maxOffset; ++offsetXCandidate) {
                         for (int offsetYCandidate = -maxOffset; offsetYCandidate <= maxOffset; ++offsetYCandidate) {
                             for (double scaleCandidate = minScale; scaleCandidate <= maxScale; scaleCandidate += scaleStep) {
